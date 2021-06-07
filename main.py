@@ -18,33 +18,45 @@ def play_sound_file(filename):
     sd.play(data, fs)
     sd.wait()  # Wait until file is done playing
 
-def bandpass_filter(data, fs):
-    fs = fs  # Sample rate
+def sine_wave(freq):
+    """
+    generates a sine wave given a specific frequency.
+    freq: float
+    :return: numpy array
+    """
+    fs = 48000  # Sample rate
     seconds = 1  # Duration of recording
-    nyq = 0.1 * fs
-    # print(nyq)
-    frequency_low = 1 / nyq
-    frequency_high = 500 / nyq
+    frequency = freq
+    x = np.linspace(0, seconds * 2 * np.pi, int(seconds * fs))
+    sine_wave_data = np.sin(frequency * x) 
+    sine_wave_data = np.int16(sine_wave_data * 8192)
+    return sine_wave_data
+
+def bandpass_filter(data, fs, nyq, low, high, seconds):
+    fs = fs  # Sample rate
+    seconds = seconds  # Duration of recording
+    nyq = nyq * fs
+    frequency_low = low / nyq
+    frequency_high = high / nyq
     sos = butter(5, [frequency_low, frequency_high], btype='bandpass', output='sos')
-    #y = sosfilt(sos, data)
     y = sosfiltfilt(sos, data)
     return y, fs
 
 def main(args):
-    data, sample_rate = sf.read(args.load_file)
-    play_sound_file(args.load_file)
-    # plt.plot(data)
-    # plt.show()
-    # print('Max: ', max(data), 'Min: ', min(data))
-    data, sample_rate = bandpass_filter(data, sample_rate)
-    # autocorr = fftconvolve(data, data[::-1], mode='full')
-    # print('Max: ', max(data), 'Min: ', min(data))
-    # time = np.linspace(0, 1 * 2 * np.pi, sample_rate)
-    sd.play(data, sample_rate)
-    sd.wait()
-    plt.plot(data)
-    plt.show()
-    write('testing.wav', sample_rate, data)
+
+    # # Example for using bandpass_filter
+    # # Plays sine wave first followed by filtered sine wave which is now sounds like white noise
+
+    # sample_rate = 48000
+    # sine = sine_wave(440)
+    # sd.play(sine, sample_rate)
+    # sd.wait()
+    # write('testing_sine.wav', sample_rate, sine)
+    # sine, sample_rate = bandpass_filter(sine, sample_rate, 0.1, 500, 1000, 1)
+    # sd.play(sine, sample_rate)
+    # sd.wait()
+    # write('testing_bandpass.wav', sample_rate, sine)
+    print("Goodbye")
 
 
 if __name__ == '__main__':
@@ -62,9 +74,11 @@ if __name__ == '__main__':
     parser.add_argument('-f', '--file',
                     type=str,
                     help='new file name to save audio')
-    parser.add_argument('-af', '--apply_filter',
-                    type=str,
-                    help='Filter you want to apply to audio file')
+    parser.add_argument('-ft', '--filter',
+                    nargs='+',
+                    help='Filter you want to apply to audio file'
+                    'Must include following arguments'
+                    '-ft nyq low high seconds')
     parser.add_argument('-p', '--play',
                     type=str,
                     help='Audio file you want to play')
