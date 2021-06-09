@@ -32,15 +32,73 @@ def sine_wave(freq):
     sine_wave_data = np.int16(sine_wave_data * 8192)
     return sine_wave_data
 
-def bandpass_filter(data, fs, nyq, low, high, seconds):
-    fs = fs  # Sample rate
-    seconds = seconds  # Duration of recording
-    nyq = nyq * fs
-    frequency_low = low / nyq
-    frequency_high = high / nyq
+def bandpass_filter(data, fs, filter_args):
+    nyq = filter_args[0] * fs
+    frequency_low = filter_args[1] / nyq
+    frequency_high = filter_args[2] / nyq
+    seconds = filter_args[3]
     sos = butter(5, [frequency_low, frequency_high], btype='bandpass', output='sos')
     y = sosfiltfilt(sos, data)
     return y, fs
+
+def reverb(data, fs, delay, decay_factor):
+
+    normal = np.copy(data)
+    comb1 = comb_filt(data, delay, decay_factor, fs)
+    comb2 = comb_filt(data, (delay - 11.73), (decay_factor - 0.1313), fs)
+    comb3 = comb_filt(data, (delay + 19.31), (decay_factor - 0.2743), fs)
+    comb4 = comb_filt(data, (delay - 7.97), (decay_factor - 0.31), fs)
+
+    combed = sum([comb1, comb2, comb3, comb4])
+
+    for points in combed:
+        i = 0
+        # print('1:', combed[i])
+        combed[i] = (normal[i] * 0.5) + (points * 0.5)
+        # print('2:', combed[i])
+    #     if points > 1:
+    #         print('Points being mixed: ', points)
+    # print('Here: ', max(combed))
+
+    pass1 = allpass_filt(combed, fs)
+    pass2 = allpass_filt(pass1, fs)
+
+    return pass2
+
+def comb_filt(data, delay, decay_factor, sample_rate):
+    delay_samples = int(delay * (sample_rate/1000))
+    for sample in data:
+        i = 0
+        data[i + delay_samples] += data[i] * decay_factor
+    return data
+
+def allpass_filt(data, sample_rate):
+    delay_samples = int(89.27 * (sample_rate/1000))
+    decay_factor = 0.131
+    max_val = 0.0
+
+    for sample in data:
+        i = 0
+        if (i - delay_samples >= 0):
+            data[i] += -decay_factor * data[i-delay_samples]
+        if (i - delay_samples >= 1):
+            data[i] += decay_factor * data[i+20-delay_samples]
+        i += 1
+    
+    value = data.flat[0]
+    for sample in data:
+        if abs(sample) > max_val:
+            # print('max before: ', max_val)
+            # print('sample:', abs(sample))
+            max_val = abs(sample)
+            # print('max after: ', max_val)
+
+    for sample in data:
+        i = 0
+        test = sample
+        data[i] = (value + (test - value)) / max_val
+
+    return data
 
 def main(args):
 
@@ -56,6 +114,20 @@ def main(args):
     # sd.play(sine, sample_rate)
     # sd.wait()
     # write('testing_bandpass.wav', sample_rate, sine)
+
+    data, fs = sf.read(args.file)
+    # play_sound_file('Recorded Wav Files/gc.wav')
+    data = reverb(data, fs, 100, 0.5)
+    write('testing_reverb.wav', fs, data)
+    # play_sound_file('testing_reverb.wav')
+    if args.filter:
+        if not args.file:
+            print('No file submitted using sine wave')
+        else:
+            data, fs = sf.read(args.file)
+            data, fs = bandpass_filter(data, fs, args.filter)
+            write(args.file, fs, data)
+
     print("Goodbye")
 
 
@@ -78,7 +150,7 @@ if __name__ == '__main__':
                     nargs='+',
                     help='Filter you want to apply to audio file'
                     'Must include following arguments'
-                    '-ft nyq low high seconds')
+                    '-ft <nyq low high seconds>')
     parser.add_argument('-p', '--play',
                     type=str,
                     help='Audio file you want to play')
