@@ -1,4 +1,4 @@
-# Santiago Tobon
+# Santiago Tobon & Cody Jeffries
 # CS410 - Comp, Sound, and Music
 # Spring 2021
 # References
@@ -25,7 +25,7 @@ def record_audio(fs, time, output_file):
     countdown(mins=0, secs=5)
     myrecording = sd.rec(int(seconds * fs), samplerate=fs, channels=2)
     sd.wait()  # Wait until recording is finished
-    write(output_file, fs, myrecording)  # Save as WAV file 
+    write(output_file, fs, myrecording.astype(np.int16))  # Save as WAV file 
 
 record_audio(fs, seconds, output_file)
 time.sleep(1)
