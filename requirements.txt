@@ -1,0 +1,8 @@
+sounddevice
+soundfile
+numpy
+matplotlib
+scipy
+playsound
+wave
+countdown
