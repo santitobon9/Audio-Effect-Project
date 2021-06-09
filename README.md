@@ -20,4 +20,23 @@ Audio-Effect-Project
 		python3 main.py
 		```
 	* Testing
-		The 
+	
+		The main testing method was comparison of audio files in audacity. Using this system we could view the wave shape or listen for the desired effect. For example when testing the bandpass filter Audacity was used to verify the atenuation of a wave at a certain frequency.
+
+* Examples
+	
+	Example audio files with desired effects and filters are located in the Recorded Wav Files directory.
+
+	The code that created them is in main.py commented out.
+
+* Retro-Spective
+
+	The process of learning and understanding what digital sound processing or DSP made up a large portion of this project. This process meant first understanding what an effect is, how it effects a signal, and then how to implement that in code. 
+	
+	This worked well for the effect features tremelo, flanger, and choras. The bandpass filter also went well, but the reverb effect didn't. Reverb was the last effect implemented and needed more time to understand and implement. The process of learning how the code interacts with the signal has been exciting for the group memembers and want to keep working out some of the kinks with this effect. In the future it would be nice to finish the reverb effect and add other tools.
+
+	In the end we are happy with the results acheived. Both team members learned new things about signal processing and future potential projects to add. Neither had worked with sound and music before digitally but now we see areas of application in our respective fields of interest.
+
+* License
+
+	https://github.com/santitobon9/Audio-Effect-Project/blob/main/LICENSE
