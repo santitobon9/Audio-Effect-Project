@@ -1,3 +1,6 @@
+# Santiago Tobon & Cody Jeffries
+# CS410 - Comp, Sound, and Music
+# Spring 2021
 import argparse
 import sounddevice as sd
 import soundfile as sf
