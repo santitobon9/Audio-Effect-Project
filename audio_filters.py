@@ -6,6 +6,8 @@
 # https://github.com/wybiral/python-musical/blob/master/musical/audio/effect.py
 # https://github.com/pdx-cs-sound/fft-filter/blob/main/fft-filter.py
 # https://github.com/wybiral/python-musical/blob/master/musical/audio/source.py
+# https://www2.cs.uic.edu/~i101/SoundFiles/
+# https://www.ee.columbia.edu/~dpwe/sounds/music/
 
 import wave
 import math
@@ -107,11 +109,11 @@ def tremolo(data, freq, dry=0.5, wet=0.5, rate=44100):
 params, samples = read_wave("Sample Wav Files/africa-toto.wav")
 #print(params)
 samples = np.asarray(samples)
-
+"""
 output = chorus(samples, freq=3.14159)
 write_wave("Recorded Wav Files/chorus-africa-toto.wav", output, params)
-
-output = flanger(samples, freq=3000)
+"""
+output = flanger(samples, freq=10)
 write_wave("Recorded Wav Files/flanger-africa-toto.wav", output, params)
 
 output = tremolo(samples, freq=100)
