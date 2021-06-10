@@ -16,17 +16,10 @@ from playsound import playsound
 from scipy.io.wavfile import write
 from countdown import countdown
 
-fs = 44100  # Sample rate
-seconds = 3  # Duration of recording
-output_file = 'Recorded Wav Files/test.wav'
-
-def record_audio(fs, time, output_file):
+def record_audio(time, output_file, fs=44100,):
     print("Will start recording in 5 seconds!!")
     countdown(mins=0, secs=5)
     myrecording = sd.rec(int(seconds * fs), samplerate=fs, channels=2)
     sd.wait()  # Wait until recording is finished
-    write(output_file, fs, myrecording.astype(np.int16))  # Save as WAV file 
-
-record_audio(fs, seconds, output_file)
-time.sleep(1)
-playsound(output_file)
+    write("Recorded Wav Files/"+output_file, fs, myrecording.astype(np.int16))  # Save as WAV file
+    print("Recording Complete!") 

@@ -8,103 +8,165 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.signal import butter, sosfilt, convolve, sosfiltfilt
 from scipy.io.wavfile import write
+from os import listdir
+from os.path import isfile, join
+from playsound import playsound
+import audio_filters as af
+import audio_recording as ar
 
-def play_sound_file(filename):
-    """
-    Attempts to play a sound file given a filename.
-    :param filename: str
-        .wav file
-    :return: N/A no return
-    """
-    # Extract data and sampling rate from file 
-    data, fs = sf.read(filename)
-    sd.play(data, fs)
-    sd.wait()  # Wait until file is done playing
+def display_samples():
+    path = "Sample Wav Files/"
+    wav_files = [f for f in listdir(path) if isfile(join(path, f))]
+    print("Samples:")
+    print(wav_files)
+    print()
 
-def sine_wave(freq):
-    """
-    generates a sine wave given a specific frequency.
-    freq: float
-    :return: numpy array
-    """
-    fs = 48000  # Sample rate
-    seconds = 1  # Duration of recording
-    frequency = freq
-    x = np.linspace(0, seconds * 2 * np.pi, int(seconds * fs))
-    sine_wave_data = np.sin(frequency * x) 
-    sine_wave_data = np.int16(sine_wave_data * 8192)
-    return sine_wave_data
+def display_recorded():
+    path = "Recorded Wav Files/"
+    wav_files = [f for f in listdir(path) if isfile(join(path, f))]
+    print("Recorded:")
+    print(wav_files)
+    print()
 
-def bandpass_filter(data, fs, filter_args):
-    nyq = filter_args[0] * fs
-    frequency_low = filter_args[1] / nyq
-    frequency_high = filter_args[2] / nyq
-    seconds = filter_args[3]
-    sos = butter(5, [frequency_low, frequency_high], btype='bandpass', output='sos')
-    y = sosfiltfilt(sos, data)
-    return y, fs
+def effects_menu():
+    quit = False
+    while(quit==False):
+        print("Effects Menu:")
+        print("1. Apply Chorus")
+        print("2. Apply Flanger")
+        print("3. Apply Tremolo")
+        print("4. Apply Reverb")
+        print("5. Apply Bandpass Filter")
+        print("6. Back to Main Menu")
+        val = input()
 
-def reverb(data, fs, delay, decay_factor):
+        if(val == '1'):
+            display_samples()
+            display_recorded()
+            filename = input("What Wav file would you like to apply the effect to? (ex: test.wav)  ")
+            dic = input("Is this in samples or recorded?  ")
+            if (dic=="samples"):
+                folder = "Sample Wav Files/"
+            elif (dic=="recorded"):
+                folder = "Recorded Wav Files/"
+            else: 
+                print("Invalid Input")
+                continue
+            params, samples = af.read_wave(folder + filename)
+            output = af.chorus(np.asarray(samples), freq=3.14159)
+            output_file = "Recorded Wav Files/" + "chorus-" + filename
+            af.write_wave(output_file, output, params)
+        elif(val == '2'):
+            display_samples()
+            display_recorded()
+            filename = input("What Wav file would you like to apply the effect to? (ex: test.wav)  ")
+            dic = input("Is this in samples or recorded?  ")
+            if (dic=="samples"):
+                folder = "Sample Wav Files/"
+            elif (dic=="recorded"):
+                folder = "Recorded Wav Files/"
+            else: 
+                print("Invalid Input")
+                continue
+            params, samples = af.read_wave(folder + filename)
+            output = af.flanger(np.asarray(samples), freq=10)
+            output_file = "Recorded Wav Files/" + "flanger-" + filename
+            af.write_wave(output_file, output, params)
+        elif(val == '3'):
+            display_samples()
+            display_recorded()
+            filename = input("What Wav file would you like to apply the effect to? (ex: test.wav)  ")
+            dic = input("Is this in samples or recorded?  ")
+            if (dic=="samples"):
+                folder = "Sample Wav Files/"
+            elif (dic=="recorded"):
+                folder = "Recorded Wav Files/"
+            else: 
+                print("Invalid Input")
+                continue
+            params, samples = af.read_wave(folder + filename)
+            output = af.tremolo(np.asarray(samples), freq=100)
+            output_file = "Recorded Wav Files/" + "tremolo-" + filename
+            af.write_wave(output_file, output, params)
+        elif(val == '4'):
+            display_samples()
+            display_recorded()
+            filename = input("What Wav file would you like to apply the effect to? (ex: test.wav)  ")
+            dic = input("Is this in samples or recorded?  ")
+            if (dic=="samples"):
+                folder = "Sample Wav Files/"
+            elif (dic=="recorded"):
+                folder = "Recorded Wav Files/"
+            else: 
+                print("Invalid Input")
+                continue
+            params, samples = af.read_wave(folder + filename)
+            output = af.reverb(samples, fs=params.framrate)
+            output_file = "Recorded Wav Files/" + "reverb-" + filename
+            write(output_file, params.framrate, output)
+        elif(val == '5'):
+            
+            display_samples()
+            display_recorded()
+            filename = input("What Wav file would you like to apply the effect to? (ex: test.wav)  ")
+            dic = input("Is this in samples or recorded?  ")
+            if (dic=="samples"):
+                folder = "Sample Wav Files/"
+            elif (dic=="recorded"):
+                folder = "Recorded Wav Files/"
+            else: 
+                print("Invalid Input")
+                continue
+            params, samples = af.read_wave(folder + filename)
+            fs = params.framerate
+            # args: nyq, low freq, high freq, secs
+            filter_args = [0.1, 350, 800, 1]
+            output, fs = af.bandpass_filter(samples, fs, filter_args)
+            output_file = "Recorded Wav Files/" + "bandpass-" + filename
+            write(output_file, fs, output)
+        elif(val == '6'):
+            quit = True
 
-    normal = np.copy(data)
-    comb1 = comb_filt(data, delay, decay_factor, fs)
-    comb2 = comb_filt(data, (delay - 11.73), (decay_factor - 0.1313), fs)
-    comb3 = comb_filt(data, (delay + 19.31), (decay_factor - 0.2743), fs)
-    comb4 = comb_filt(data, (delay - 7.97), (decay_factor - 0.31), fs)
+def main():
+    print("Welcome to our Audio Effect Program!!!")
+    quit = False
+    while(quit==False):
+        print("Main Menu:")
+        print("1. Record Audio")
+        print("2. View Sample Wav Files")
+        print("3. View Recorded Wav Files")
+        print("4. Apply Effects")
+        print("5. Listen to a Wav File")
+        print("6. Quit")
+        val = input()
+        if(val == '1'):
+            time = input("How long do you want to record?  ")
+            filename = input("What would you like the file to be called? (ex: test.wav)  ")
+            ar.record_audio(time, filename)
+        elif(val == '2'):
+            display_samples()
+        elif(val == '3'):
+            display_recorded()
+        elif(val == '4'):
+            effects_menu()
+        elif(val == '5'):
+            filename = input("What Wav file would you like to listen to? (ex: test.wav)  ")
+            dic = input("Is this in samples or recorded?  ")
+            if (dic=="samples"):
+                folder = "Sample Wav Files/"
+            elif (dic=="recorded"):
+                folder = "Recorded Wav Files/"
+            playsound(folder + filename)
+        elif(val == '6'):
+            quit = True
+        else:
+            print("Invalid Input")
 
-    combed = sum([comb1, comb2, comb3, comb4])
+main()
 
-    for points in combed:
-        i = 0
-        # print('1:', combed[i])
-        combed[i] = (normal[i] * 0.5) + (points * 0.5)
-        # print('2:', combed[i])
-    #     if points > 1:
-    #         print('Points being mixed: ', points)
-    # print('Here: ', max(combed))
-
-    pass1 = allpass_filt(combed, fs)
-    pass2 = allpass_filt(pass1, fs)
-
-    return pass2
-
-def comb_filt(data, delay, decay_factor, sample_rate):
-    delay_samples = int(delay * (sample_rate/1000))
-    for sample in data:
-        i = 0
-        data[i + delay_samples] += data[i] * decay_factor
-    return data
-
-def allpass_filt(data, sample_rate):
-    delay_samples = int(89.27 * (sample_rate/1000))
-    decay_factor = 0.131
-    max_val = 0.0
-
-    for sample in data:
-        i = 0
-        if (i - delay_samples >= 0):
-            data[i] += -decay_factor * data[i-delay_samples]
-        if (i - delay_samples >= 1):
-            data[i] += decay_factor * data[i+20-delay_samples]
-        i += 1
-    
-    value = data.flat[0]
-    for sample in data:
-        if abs(sample) > max_val:
-            # print('max before: ', max_val)
-            # print('sample:', abs(sample))
-            max_val = abs(sample)
-            # print('max after: ', max_val)
-
-    for sample in data:
-        i = 0
-        test = sample
-        data[i] = (value + (test - value)) / max_val
-
-    return data
-
+"""
 def main(args):
-
+    
     # # Example for using bandpass_filter
     # # Plays sine wave first followed by filtered sine wave which is now sounds like white noise
 
@@ -132,35 +194,4 @@ def main(args):
             write(args.file, fs, data)
 
     print("Goodbye")
-
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(prog='Audio Effects',
-                                description='Simple Audio Effects'
-                                ' program for sound and music',
-                                allow_abbrev=False)
-    parser.add_argument('-r', '--record',
-                    type=str,
-                    default='temp-file',
-                    help='Audio filename to save recording')
-    parser.add_argument('-lf', '--load_file',
-                    type=str,
-                    help='Audio file to load')
-    parser.add_argument('-f', '--file',
-                    type=str,
-                    help='new file name to save audio')
-    parser.add_argument('-ft', '--filter',
-                    nargs='+',
-                    help='Filter you want to apply to audio file'
-                    'Must include following arguments'
-                    '-ft <nyq low high seconds>')
-    parser.add_argument('-p', '--play',
-                    type=str,
-                    help='Audio file you want to play')
-
-    args = parser.parse_args()
-
-    try:
-        main(args)
-    except KeyboardInterrupt:
-        print('Goodbye!')
+"""

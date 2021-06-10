@@ -18,23 +18,74 @@ import time
 from numpy import loadtxt
 from playsound import playsound
 from scipy.io.wavfile import write
+from scipy.signal import butter, sosfilt, convolve, sosfiltfilt
 
-"""
-def sine_wave(freq, params):
-    ampl = .16666
-    wave = np.zeros(params.nframes)
-    for x in range(params.nframes):
-        sin_val = math.sin(2 * math.pi * freq * x / params.nframes)
-        wave[x] = np.int16(sin_val * 32767 * ampl)
-    return wave
-"""
+def bandpass_filter(data, fs, filter_args):
+    nyq = filter_args[0] * fs
+    frequency_low = filter_args[1] / nyq
+    frequency_high = filter_args[2] / nyq
+    seconds = filter_args[3]
+    sos = butter(5, [frequency_low, frequency_high], btype='bandpass', output='sos')
+    y = sosfiltfilt(sos, data)
+    return y, fs
+
+def reverb(data, fs=44100, delay=100, decay_factor=0.5):
+
+    normal = np.copy(data)
+    comb1 = comb_filt(data, delay, decay_factor, fs)
+    comb2 = comb_filt(data, (delay - 11.73), (decay_factor - 0.1313), fs)
+    comb3 = comb_filt(data, (delay + 19.31), (decay_factor - 0.2743), fs)
+    comb4 = comb_filt(data, (delay - 7.97), (decay_factor - 0.31), fs)
+
+    combed = sum([comb1, comb2, comb3, comb4])
+
+    for points in combed:
+        i = 0
+        combed[i] = (normal[i] * 0.5) + (points * 0.5)
+
+    pass1 = allpass_filt(combed, fs)
+    pass2 = allpass_filt(pass1, fs)
+
+    return pass2
+
+def comb_filt(data, delay, decay_factor, sample_rate):
+    delay_samples = int(delay * (sample_rate/1000))
+    for sample in data:
+        i = 0
+        data[i + delay_samples] += data[i] * decay_factor
+    return data
+
+def allpass_filt(data, sample_rate):
+    delay_samples = int(89.27 * (sample_rate/1000))
+    decay_factor = 0.131
+    max_val = 0.0
+
+    for sample in data:
+        i = 0
+        if (i - delay_samples >= 0):
+            data[i] += -decay_factor * data[i-delay_samples]
+        if (i - delay_samples >= 1):
+            data[i] += decay_factor * data[i+20-delay_samples]
+        i += 1
+    
+    value = data.flat[0]
+    for sample in data:
+        if abs(sample) > max_val:
+            max_val = abs(sample)
+
+    for sample in data:
+        i = 0
+        test = sample
+        data[i] = (value + (test - value)) / max_val
+
+    return data
 
 def sine_wave(freq, length, rate=44100, phase=0.0):
     data = generate_wave_input(freq, length, rate, phase)
     return np.sin(data)
 
 def generate_wave_input(freq, length, rate=44100, phase=0.0):
-    length = int(length * rate)+1
+    length = int(length * rate)
     #print(length)
     t = np.arange(length) / float(rate)
     omega = float(freq) * 2 * math.pi
@@ -61,8 +112,6 @@ def modulated_delay(data, modwave, dry, wet):
     ''' Use LFO "modwave" as a delay modulator (no feedback)
     '''
     out = data.copy()
-    #print(len(modwave))
-    #print(len(data))
     for i in range(len(data)-1):
         index = int(i - modwave[i])
         if index >= 0 and index < len(data):
@@ -74,8 +123,6 @@ def feedback_modulated_delay(data, modwave, dry, wet):
     ''' Use LFO "modwave" as a delay modulator (with feedback)
     '''
     out = data.copy()
-    #print(len(modwave))
-    #print(len(data))
     for i in range(len(data)-2):
         index = int(i - modwave[i])
         if index >= 0 and index < len(data):
@@ -101,20 +148,4 @@ def flanger(data, freq, dry=0.5, wet=0.5, depth=20.0, delay=1.0, rate=44100):
 def tremolo(data, freq, dry=0.5, wet=0.5, rate=44100):
     length = float(len(data)) / rate
     modwave = (sine_wave(freq, length) / 2 + 0.5)
-    #print(len(modwave), len(data))
-    #print(type(data), type(modwave))
     return (data * dry) + ((data * modwave) * wet)
-
-#playsound("Recorded Wav Files/Fanfare60.wav")
-params, samples = read_wave("Sample Wav Files/africa-toto.wav")
-#print(params)
-samples = np.asarray(samples)
-"""
-output = chorus(samples, freq=3.14159)
-write_wave("Recorded Wav Files/chorus-africa-toto.wav", output, params)
-"""
-output = flanger(samples, freq=10)
-write_wave("Recorded Wav Files/flanger-africa-toto.wav", output, params)
-
-output = tremolo(samples, freq=100)
-write_wave("Recorded Wav Files/tremolo-africa-toto.wav", output, params)
