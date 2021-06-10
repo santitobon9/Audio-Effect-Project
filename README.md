@@ -40,3 +40,21 @@ Audio-Effect-Project
 * License
 
 	https://github.com/santitobon9/Audio-Effect-Project/blob/main/LICENSE
+
+* References
+
+	https://pythonaudiosynthesisbasics.com/
+
+	https://github.com/wybiral/python-musical/blob/master/musical/audio/effect.py
+
+	https://github.com/pdx-cs-sound/fft-filter/blob/main/fft-filter.py
+
+	https://github.com/wybiral/python-musical/blob/master/musical/audio/source.py
+
+	https://www2.cs.uic.edu/~i101/SoundFiles/
+
+	https://www.ee.columbia.edu/~dpwe/sounds/music/
+
+	https://www.electronics-tutorials.ws/filter/filter_4.html
+
+	https://medium.com/the-seekers-project/coding-a-basic-reverb-algorithm-an-introduction-to-audio-programming-d5d90ad58bde
